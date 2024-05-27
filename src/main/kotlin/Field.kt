@@ -1,109 +1,20 @@
-fun main() {
-    //solveSimple()
-    solveReal()
-}
+data class Span(val color: Int, val length: Int)
 
-private fun solveSimple() {
-    Field(
-        arrayOf(
-            arrayOf(1, 1),
-            arrayOf(1),
-            arrayOf(1, 1)
-        ),
-        arrayOf(
-            arrayOf(1, 1),
-            arrayOf(1),
-            arrayOf(1, 1)
-        )
-    ).solve()
-}
+typealias Limit = List<Span>
+typealias Limits = List<Limit>
 
-private fun solveReal() {
-    Field(
-        arrayOf(
-            arrayOf(3, 7),
-            arrayOf(1, 2, 5, 1, 1),
-            arrayOf(5, 7, 1, 5),
-            arrayOf(1, 3, 7, 5),
-            arrayOf(1, 1, 2, 9),
-            arrayOf(1, 1, 4, 2, 3, 2),
-            arrayOf(1, 1, 4, 2, 1, 1, 1, 2),
-            arrayOf(3, 18),
-            arrayOf(1, 9, 3),
-            arrayOf(1, 1, 4, 1, 1, 1, 2, 3),
-            arrayOf(5, 3, 1, 2, 1),
-            arrayOf(1, 1, 2, 1, 2, 5),
-            arrayOf(1, 1, 1, 13, 2),
-            arrayOf(1, 1, 2, 1, 1, 1),
-            arrayOf(1, 1, 1, 3, 1, 1, 2),
-            arrayOf(11, 5, 3),
-            arrayOf(1, 6, 5),
-            arrayOf(1, 1, 1, 7, 7),
-            arrayOf(1, 18),
-            arrayOf(1, 1, 1, 1, 14, 2),
-            arrayOf(1, 1, 1, 1, 8, 5, 2),
-            arrayOf(16, 6, 1),
-            arrayOf(1, 1, 4, 4, 3),
-            arrayOf(1, 1, 1, 3, 1, 8),
-            arrayOf(1, 1, 1, 3, 1),
-            arrayOf(1, 1, 1, 4, 4, 1),
-            arrayOf(1, 1, 1, 1, 1, 7, 2, 1),
-            arrayOf(1, 1, 1, 3, 1, 1, 3, 1),
-            arrayOf(1, 1, 1, 1, 5, 1, 1, 1),
-            arrayOf(1, 1, 1, 1, 1, 5, 4)
-        ),
-        arrayOf(
-            arrayOf(2, 9),
-            arrayOf(2, 1, 7),
-            arrayOf(1, 1, 1, 6, 1, 1, 5),
-            arrayOf(3, 1, 5, 1, 1, 3),
-            arrayOf(1, 2, 1, 1, 1, 2, 1, 1, 5),
-            arrayOf(11, 1, 1, 3),
-            arrayOf(8, 6, 1, 1),
-            arrayOf(5, 13),
-            arrayOf(5, 4, 1, 1, 1, 3),
-            arrayOf(5, 5, 1, 1, 1, 1),
-            arrayOf(12, 3, 2),
-            arrayOf(2, 13),
-            arrayOf(8, 7, 2),
-            arrayOf(5, 1, 6, 1),
-            arrayOf(3, 1, 3, 4, 1, 1),
-            arrayOf(4, 2, 1, 1, 1, 4, 1, 2),
-            arrayOf(5, 1, 1, 1, 3, 1, 2),
-            arrayOf(7, 1, 1, 3, 2, 1),
-            arrayOf(5, 1, 1, 1, 3, 1, 2),
-            arrayOf(4, 2, 1, 1, 1, 3, 1, 1),
-            arrayOf(3, 1, 3, 7, 1),
-            arrayOf(1, 5, 1, 10),
-            arrayOf(1, 1, 22),
-            arrayOf(1, 2, 4, 16),
-            arrayOf(2, 1, 6, 1, 1, 1, 1),
-            arrayOf(1, 2, 2, 3, 1, 1, 1),
-            arrayOf(1, 2, 1, 2, 2, 1),
-            arrayOf(1, 1, 1, 1, 5, 1),
-            arrayOf(1, 1, 2, 5),
-            arrayOf(2, 1, 2)
-        )
-    ).solve()
-}
-
-enum class EValue {
-    Unknown,
-    Marked,
-    Empty
-}
-
-class Field(private val rowLimits: Array<Array<Int>>, private val columnLimits: Array<Array<Int>>) {
+class Field(private val rowLimits: Limits, private val columnLimits: Limits) {
     private val width = columnLimits.size
     private val height = rowLimits.size
     private val size = width * height
-    private val cells = Array(width * height) { EValue.Unknown }
+    private val cells = Array(width * height) { UNKNOWN }
+    private val maxColor = rowLimits.maxOf { limit ->
+        limit.maxOf { span -> span.color }
+    }
 
     fun solve() {
-        canComplete(0)
+        println(canComplete(0))
         print()
-        println((0..<height).all { y -> isRowValid(y) })
-        println((0..<width).all { x -> isColumnValid(x) })
     }
 
     private fun print() {
@@ -115,28 +26,23 @@ class Field(private val rowLimits: Array<Array<Int>>, private val columnLimits: 
         }
     }
 
-    private fun getChar(value: EValue) = when (value) {
-        EValue.Marked -> '#'
-        EValue.Empty -> '.'
-        EValue.Unknown -> ' '
-    }
+    private fun getChar(value: Int)
+        = if (value > EMPTY) {
+            "#" + (value + 'A'.code).toChar()
+        } else {
+            "  "
+        }
 
     private fun canComplete(index: Int): Boolean {
         if (index >= size) {
             return true
         }
-        cells[index] = EValue.Marked
-        return if (isValidAfterCellUpdate(index) && canComplete(index + 1)) {
-            true
-        } else {
-            cells[index] = EValue.Empty
-            if (isValidAfterCellUpdate(index) && canComplete(index + 1)) {
-                true
-            } else {
-                cells[index] = EValue.Unknown
-                false
-            }
+        val correctColor = (EMPTY..maxColor).firstOrNull { color ->
+            cells[index] = color
+            isValidAfterCellUpdate(index) && canComplete(index + 1)
         }
+        cells[index] = correctColor ?: UNKNOWN
+        return correctColor != null
     }
 
     private fun isValidAfterCellUpdate(index: Int): Boolean {
@@ -151,31 +57,43 @@ class Field(private val rowLimits: Array<Array<Int>>, private val columnLimits: 
     private fun isColumnValid(x: Int)
         = areLimitsHonored(columnLimits[x], height) { y -> y * width + x }
 
-    private fun areLimitsHonored(limits: Array<Int>, maxB: Int, coordsToIndex: (Int) -> Int): Boolean {
+    private fun areLimitsHonored(limit: Limit, maxB: Int, coordsToIndex: (Int) -> Int): Boolean {
         var i = 0
-        for (chunkSize in limits) {
-            while (i < maxB && cells[coordsToIndex(i)] == EValue.Empty) {
+        var previousColor = UNKNOWN
+        for (span in limit) {
+            if (previousColor == span.color) {
+                ++i // there should be space between same-color span
+            }
+            while (i < maxB && cells[coordsToIndex(i)] == EMPTY) {
                 ++i
             }
             var counted = 0
-            while (counted < chunkSize && i < maxB && cells[coordsToIndex(i)] != EValue.Empty) {
+            while (i < maxB && counted < span.length && couldBeColor(cells[coordsToIndex(i)], span.color)) {
                 ++i
                 ++counted
             }
-            if (counted < chunkSize) {
+            if (counted < span.length) {
                 return false
             }
-            if (i < maxB && cells[coordsToIndex(i)] == EValue.Marked) {
+            if (i < maxB && cells[coordsToIndex(i)] == span.color) {
                 return false
             }
-            ++i
+            previousColor = span.color
         }
         while (i < maxB) {
-            if (cells[coordsToIndex(i)] == EValue.Marked) {
+            if (cells[coordsToIndex(i)] > EMPTY) {
                 return false
             }
             ++i
         }
         return true
+    }
+
+    companion object {
+        const val EMPTY = -1
+        const val UNKNOWN = -2
+
+        private fun couldBeColor(cell: Int, color: Int)
+            = cell == color || cell == UNKNOWN
     }
 }
